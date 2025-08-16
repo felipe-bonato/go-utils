@@ -16,12 +16,12 @@ func TestRingBuffer(t *testing.T) {
 	}
 
 	pushLen := func(value int, expectedLen int) {
-		rb.PushBack(value)
+		rb.Push(value)
 		expectLen(expectedLen)
 	}
 
 	pushRemoved := func(value int, expectedLen int, expectedRemoved int) {
-		item, removed := rb.PushBack(value)
+		item, removed := rb.Push(value)
 		expectLen(expectedLen)
 
 		if !removed {
@@ -33,7 +33,7 @@ func TestRingBuffer(t *testing.T) {
 	}
 
 	pop := func(expectedValue int, expectedOk bool, expectedLen int) {
-		v, ok := rb.PopFront()
+		v, ok := rb.Pop()
 		if ok != expectedOk || v != expectedValue {
 			t.Fatalf("Expected to %d %t, but got %d %t", expectedValue, expectedOk, v, ok)
 		}

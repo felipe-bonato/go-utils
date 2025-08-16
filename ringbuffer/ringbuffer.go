@@ -1,5 +1,7 @@
 package ringbuffer
 
+import goutils "github.com/felipe-bonato/go-utils"
+
 type RingBuffer[T any] struct {
 	values []T
 	len    int
@@ -8,21 +10,29 @@ type RingBuffer[T any] struct {
 }
 
 func New[T any](size int) RingBuffer[T] {
+	if size <= 0 {
+		panic("ringbuffer: size must be > ")
+	}
 	return RingBuffer[T]{
-		values: make([]T, size, size),
+		values: make([]T, size),
 		len:    0,
 		write:  0,
 		read:   0,
 	}
 }
 
-// Inserts ´value´ in the front of the ring buffer,
-// returning ´T, true´ if an item was removed to insert it.
-func (rb *RingBuffer[T]) PushBack(value T) (item T, removed bool) {
+// Inserts ´value´ in the front of the ring buffer.
+// If the buffer is full, overwrites the oldest  element,
+// retuning it and setting `evicetedOk` to true, else returns `_, false`
+func (rb *RingBuffer[T]) Push(value T) (evicted T, evictedOk bool) {
+	if rb == nil || cap(rb.values) == 0 {
+		panic("ringbuffer: uninitialized `Push` use")
+	}
+
 	if rb.len > 0 && rb.read == rb.write {
 		rb.read = (rb.read + 1) % cap(rb.values)
-		item = rb.values[rb.write]
-		removed = true
+		evicted = rb.values[rb.write]
+		evictedOk = true
 	} else {
 		rb.len += 1
 	}
@@ -31,15 +41,22 @@ func (rb *RingBuffer[T]) PushBack(value T) (item T, removed bool) {
 
 	rb.write = (rb.write + 1) % cap(rb.values)
 
-	return item, removed
+	return evicted, evictedOk
 }
 
-func (rb *RingBuffer[T]) PopFront() (value T, ok bool) {
+func (rb *RingBuffer[T]) Pop() (value T, ok bool) {
+	if rb == nil || cap(rb.values) == 0 {
+		panic("ringbuffer: uninitialized `Pop()` use")
+	}
+
 	if rb.len == 0 {
 		return value, false
 	}
 
 	value = rb.values[rb.read]
+
+	// Zero it out, so if it is a reference, the GC can dealocate it.
+	rb.values[rb.read] = goutils.Empty[T]()
 
 	rb.read = (rb.read + 1) % cap(rb.values)
 	rb.len--
@@ -48,5 +65,9 @@ func (rb *RingBuffer[T]) PopFront() (value T, ok bool) {
 }
 
 func (rb *RingBuffer[T]) Len() int {
+	if rb == nil {
+		return 0
+	}
+
 	return rb.len
 }
