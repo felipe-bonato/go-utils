@@ -1,6 +1,11 @@
 package goutils
 
-import "golang.org/x/exp/constraints"
+import (
+	"errors"
+	"fmt"
+	"os"
+	"golang.org/x/exp/constraints"
+)
 
 type Number interface {
 	constraints.Integer | constraints.Float
@@ -25,6 +30,7 @@ func Try(err error) {
 	}
 }
 
+// Clamps a  `value` between `min` and `max`.
 func Clamp[T Number](value, min, max T) T {
 	if value < min {
 		value = min
@@ -34,6 +40,7 @@ func Clamp[T Number](value, min, max T) T {
 	return value
 }
 
+// Gets deref of `value` or `defaultValue` if nil
 func Default[T any](value *T, defaultValue T) T {
 	if value == nil {
 		return defaultValue
@@ -71,4 +78,20 @@ func And[T comparable](first T, second T) T {
 	} else {
 		return second
 	}
+}
+
+// Returns true if exists, false if it doesn't, and false and error if unknowable.
+func FileExists(path string) (bool, error) {
+	if _, err := os.Stat(path); err != nil {
+		// It's only guaranteed that the file doesn't exists if the return is ErrNotExist.
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+
+		// Schrodinger file: it may or may not exist.
+		// See for more info: https://stackoverflow.com/a/12518877
+		return false, fmt.Errorf("cannot know if file exists: %w", err)
+	}
+
+	return true, nil
 }
