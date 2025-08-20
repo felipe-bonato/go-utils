@@ -15,11 +15,11 @@ func TestRetryerFailed(t *testing.T) {
 		return fmt.Errorf("%w: on try %d", ErrGeneric, try)
 	})
 	if !errors.Is(err, ErrGeneric) {
-		t.Fatalf("Expected %v, but got %v", ErrGeneric, err)
+		t.Errorf("Expected %v, but got %v", ErrGeneric, err)
 	}
 
 	if err.Error() != "failed: on try 5" {
-		t.Fatalf("Expected to err on try 5, but got %v", err)
+		t.Errorf("Expected to err on try 5, but got %v", err)
 	}
 }
 
@@ -28,7 +28,7 @@ func TestRetryerSuccess(t *testing.T) {
 		return nil
 	})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err)
+		t.Errorf("Expected no error, but got %v", err)
 	}
 }
 
@@ -41,6 +41,6 @@ func TestRetryerSuccessAfterRetries(t *testing.T) {
 		return ErrGeneric
 	})
 	if err != nil {
-		t.Fatalf("Expected no error, but got %v", err)
+		t.Errorf("Expected no error, but got %v", err)
 	}
 }

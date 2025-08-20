@@ -19,7 +19,7 @@ func TestOptionJSON(t *testing.T) {
 
 	s = testStruct{}
 	if err := json.Unmarshal([]byte("{}"), &s); err != nil {
-		t.Fatalf("Unmarshal: %s", err)
+		t.Errorf("Unmarshal: %s", err)
 	}
 
 	z, ok := s.MyInt.Val()
@@ -33,14 +33,14 @@ func TestOptionJSON(t *testing.T) {
 func testOptionJSONMarshalUnmarshal(t *testing.T, s testStruct) {
 	b, err := json.Marshal(s)
 	if err != nil {
-		t.Fatalf("Marshal: %s", err)
+		t.Errorf("Marshal: %s", err)
 	}
 
 	t.Logf("Marshal: %s", string(b))
 
 	var y testStruct
 	if err := json.Unmarshal(b, &y); err != nil {
-		t.Fatalf("Unmarshal: %s", err)
+		t.Errorf("Unmarshal: %s", err)
 	}
 
 	z, ok := y.MyInt.Val()

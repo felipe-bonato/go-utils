@@ -11,7 +11,7 @@ func TestRingBuffer(t *testing.T) {
 
 	expectLen := func(expectedLen int) {
 		if rb.Len() != expectedLen {
-			t.Fatalf("expected len %d got %d", expectedLen, rb.Len())
+			t.Errorf("expected len %d got %d", expectedLen, rb.Len())
 		}
 	}
 
@@ -25,17 +25,17 @@ func TestRingBuffer(t *testing.T) {
 		expectLen(expectedLen)
 
 		if !removed {
-			t.Fatalf("expected %d to be removed", expectedRemoved)
+			t.Errorf("expected %d to be removed", expectedRemoved)
 		}
 		if item != expectedRemoved {
-			t.Fatalf("expected %d to be removed, but got %d", expectedRemoved, item)
+			t.Errorf("expected %d to be removed, but got %d", expectedRemoved, item)
 		}
 	}
 
 	pop := func(expectedValue int, expectedOk bool, expectedLen int) {
 		v, ok := rb.Pop()
 		if ok != expectedOk || v != expectedValue {
-			t.Fatalf("Expected to %d %t, but got %d %t", expectedValue, expectedOk, v, ok)
+			t.Errorf("Expected to %d %t, but got %d %t", expectedValue, expectedOk, v, ok)
 		}
 		expectLen(expectedLen)
 	}
