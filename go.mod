@@ -1,4 +1,4 @@
-module github.com/felipe-bonato/go-utils
+module github.com/felipe-bonato/goutils
 
 go 1.23.0
 

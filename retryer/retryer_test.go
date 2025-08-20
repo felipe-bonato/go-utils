@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/felipe-bonato/go-utils/retryer"
+	"github.com/felipe-bonato/goutils/retryer"
 )
 
 var ErrGeneric error = errors.New("failed")

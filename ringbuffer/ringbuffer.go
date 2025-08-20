@@ -1,6 +1,6 @@
 package ringbuffer
 
-import goutils "github.com/felipe-bonato/go-utils"
+import goutils "github.com/felipe-bonato/goutils"
 
 type RingBuffer[T any] struct {
 	values []T

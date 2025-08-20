@@ -3,7 +3,7 @@ package ringbuffer_test
 import (
 	"testing"
 
-	"github.com/felipe-bonato/go-utils/ringbuffer"
+	"github.com/felipe-bonato/goutils/ringbuffer"
 )
 
 func TestRingBuffer(t *testing.T) {
