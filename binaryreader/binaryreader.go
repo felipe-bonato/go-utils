@@ -5,16 +5,46 @@ import (
 	"io"
 )
 
+type Endianess = binary.ByteOrder
+
+var (
+	LittleEndian Endianess = binary.LittleEndian
+	BigEndian    Endianess = binary.BigEndian
+	NativeEndian Endianess = binary.NativeEndian
+)
+
+// Reads `T` from `r` with `endianess`. If `r` ended, returns `_, false`
+//
+// `T` must have compile-time known size. If not, will always returns `_, false`
+func Read[T any](r io.Reader, endianess Endianess) (T, bool) {
+	var x T
+	return x, binary.Read(r, endianess, &x) == nil
+}
+
+// Reads `T` from `r` with `endianess`, but doesn't advance it. If `r` ended, returns `_, false`
+//
+// `T` must have compile-time known size. If not, will always returns `_, false`
+func Peek[T any](rs io.ReadSeeker, endianess Endianess) (T, bool) {
+	startPoint, err := rs.Seek(0, io.SeekCurrent)
+	if err != nil {
+		panic("saving seeking point failed")
+	}
+
+	x, ok := Read[T](rs, endianess)
+
+	// Reset the reader
+	_, err = rs.Seek(startPoint, io.SeekStart)
+	if err != nil {
+		panic("reseting seeking point failed")
+	}
+
+	return x, ok
+}
+
 type BinaryReader struct {
 	r         io.Reader
 	Endianess binary.ByteOrder
 }
-
-type Endianess = binary.ByteOrder
-
-var LittleEndian Endianess = binary.LittleEndian
-var BigEndian Endianess = binary.BigEndian
-var NativeEndian Endianess = binary.NativeEndian
 
 func New(r io.Reader, endianess Endianess) BinaryReader {
 	return BinaryReader{r, endianess}
@@ -35,14 +65,6 @@ func (br *BinaryReader) Uint64() (uint64, bool) { return Read[uint64](br.r, br.E
 func (br *BinaryReader) Float32() (float32, bool) { return Read[float32](br.r, br.Endianess) }
 func (br *BinaryReader) Float64() (float64, bool) { return Read[float64](br.r, br.Endianess) }
 
-// Reads `T` from `r` with `endianess`. If `r` ended, return `_, false`
-//
-// `T` must have compile-time known size. If not, will always return `_, false`
-func Read[T any](r io.Reader, endianess Endianess) (T, bool) {
-	var x T
-	return x, binary.Read(r, endianess, &x) == nil
-}
-
 // Reads the next `count` bytes into an array.
 func (br *BinaryReader) Bytes(count int) ([]byte, bool) {
 	// TODO: Directly reading from r is probably faster.
@@ -62,20 +84,3 @@ func (br *BinaryReader) Bytes(count int) ([]byte, bool) {
 
 // TODO: ReadStringNullTerminated
 // TODO: ReadStringSized
-
-func Peek[T any](rs io.ReadSeeker, endianess Endianess) (T, bool) {
-	currReadIndex, err := rs.Seek(0, io.SeekCurrent)
-	if err != nil {
-		panic("saving seeking index failed")
-	}
-
-	x, ok := Read[T](rs, endianess)
-
-	// Reset the reader
-	_, err = rs.Seek(currReadIndex, io.SeekStart)
-	if err != nil {
-		panic("reseting seeking index failed")
-	}
-
-	return x, ok
-}
