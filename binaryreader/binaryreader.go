@@ -35,14 +35,18 @@ func (br *BinaryReader) Uint64() (uint64, bool) { return Read[uint64](br.r, br.E
 func (br *BinaryReader) Float32() (float32, bool) { return Read[float32](br.r, br.Endianess) }
 func (br *BinaryReader) Float64() (float64, bool) { return Read[float64](br.r, br.Endianess) }
 
-func Read[T any](reader io.Reader, endianess Endianess) (T, bool) {
+// Reads `T` from `r` with `endianess`. If `r` ended, return `_, false`
+//
+// `T` must have compile-time known size. If not, will always return `_, false`
+func Read[T any](r io.Reader, endianess Endianess) (T, bool) {
 	var x T
-	return x, binary.Read(reader, endianess, &x) == nil
+	return x, binary.Read(r, endianess, &x) == nil
 }
 
 // Reads the next `count` bytes into an array.
 func (br *BinaryReader) Bytes(count int) ([]byte, bool) {
-	bytes := []byte{}
+	// TODO: Directly reading from r is probably faster.
+	bytes := make([]byte, 0, count)
 
 	for range count {
 		b, ok := br.Byte()
@@ -54,4 +58,24 @@ func (br *BinaryReader) Bytes(count int) ([]byte, bool) {
 	}
 
 	return bytes, true
+}
+
+// TODO: ReadStringNullTerminated
+// TODO: ReadStringSized
+
+func Peek[T any](rs io.ReadSeeker, endianess Endianess) (T, bool) {
+	currReadIndex, err := rs.Seek(0, io.SeekCurrent)
+	if err != nil {
+		panic("saving seeking index failed")
+	}
+
+	x, ok := Read[T](rs, endianess)
+
+	// Reset the reader
+	_, err = rs.Seek(currReadIndex, io.SeekStart)
+	if err != nil {
+		panic("reseting seeking index failed")
+	}
+
+	return x, ok
 }
