@@ -78,16 +78,13 @@ func (br *BinaryReader) Float64() (float64, bool) { return Read[float64](br.rs, 
 
 // Reads the next `count` bytes into an array.
 func (br *BinaryReader) Bytes(count int) ([]byte, bool) {
-	// TODO: Directly reading from r is probably faster.
-	bytes := make([]byte, 0, count)
-
-	for range count {
-		b, ok := br.Byte()
-		if !ok {
-			return bytes, false
-		}
-
-		bytes = append(bytes, b)
+	bytes := make([]byte, count)
+	n, err := br.rs.Read(bytes)
+	if err != nil {
+		return []byte{}, false
+	}
+	if n != count {
+		return bytes, false
 	}
 
 	return bytes, true
