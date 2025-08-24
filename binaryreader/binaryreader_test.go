@@ -8,47 +8,6 @@ import (
 	"github.com/felipe-bonato/goutils/binaryreader"
 )
 
-func TestReadByte(t *testing.T) {
-	r := bytes.NewReader([]byte{12, 13, 14})
-
-	br := binaryreader.New(r, binaryreader.LittleEndian)
-
-	testReadByte := func(expected byte) {
-		b, ok := br.Byte()
-		if !ok || b != expected {
-			t.Errorf("expected %v, but got %v", expected, b)
-		}
-	}
-
-	testReadByte(12)
-	testReadByte(13)
-	testReadByte(14)
-	if _, ok := br.Byte(); ok { // Ended, should return false
-		t.Fatal("Should have ended")
-	}
-
-}
-
-func TestReadInt32(t *testing.T) {
-	buf := []byte{12, 0, 0, 0, 13, 0, 0, 0, 14, 0, 0, 0}
-	br := binaryreader.New(bytes.NewReader(buf), binaryreader.LittleEndian)
-
-	testReadInt := func(expected int32) {
-		i, ok := br.Int32()
-		if !ok || i != expected {
-			t.Errorf("expected %v, but got %v", expected, i)
-		}
-	}
-
-	testReadInt(12)
-	testReadInt(13)
-	testReadInt(14)
-	if _, ok := br.Int32(); ok { // Ended, should return false
-		t.Fatal("Should have ended")
-	}
-
-}
-
 func TestPeek(t *testing.T) {
 	buf := []byte{5, 6, 7}
 	r := bytes.NewReader(buf)
@@ -75,5 +34,84 @@ func TestPeek(t *testing.T) {
 
 	r.Seek(1, io.SeekCurrent)
 	testPeekByte(0, false)
+}
 
+func TestBinaryReaderByte(t *testing.T) {
+	br := binaryreader.NewFromByteSlice([]byte{12, 13, 14}, binaryreader.LittleEndian)
+
+	testReadByte := func(expectedByte byte, expectedOk bool) {
+		b, ok := br.Byte()
+		if ok != expectedOk {
+			t.Errorf("read: expected ok to be %t, but got %t", expectedOk, ok)
+		}
+		if b != expectedByte {
+			t.Errorf("read: expected %d, but got %d", expectedByte, b)
+		}
+	}
+
+	testPeekByte := func(expectedByte byte, expectedOk bool) {
+		b, ok := br.PeekByte()
+		if ok != expectedOk {
+			t.Errorf("peek: expected ok to be %t, but got %t", expectedOk, ok)
+		}
+		if b != expectedByte {
+			t.Errorf("peek: expected %d, but got %d", expectedByte, b)
+		}
+	}
+
+	testPeekByte(12, true)
+	testPeekByte(12, true)
+	testReadByte(12, true)
+
+	testReadByte(13, true)
+
+	testPeekByte(14, true)
+	testReadByte(14, true)
+
+	testReadByte(0, false)
+	testPeekByte(0, false)
+}
+
+func TestBinaryReaderInt32LE(t *testing.T) {
+	testBinaryReaderInt32(t, []byte{12, 0, 0, 0, 13, 0, 0, 0, 14, 0, 0, 0}, binaryreader.LittleEndian)
+}
+
+func TestBinaryReaderInt32BE(t *testing.T) {
+	testBinaryReaderInt32(t, []byte{0, 0, 0, 12, 0, 0, 0, 13, 0, 0, 0, 14}, binaryreader.BigEndian)
+}
+
+func testBinaryReaderInt32(t *testing.T, data []byte, endianess binaryreader.Endianess) {
+	br := binaryreader.New(bytes.NewReader(data), endianess)
+
+	testReadInt := func(expectedInt int32, expectedOk bool) {
+		i, ok := br.Int32()
+		if ok != expectedOk {
+			t.Errorf("read: expected ok to be %t, but got %t", expectedOk, ok)
+		}
+		if i != expectedInt {
+			t.Errorf("read: expected %d, but got %d", expectedInt, i)
+		}
+	}
+
+	testPeekInt := func(expectedInt int32, expectedOk bool) {
+		i, ok := br.PeekInt32()
+		if ok != expectedOk {
+			t.Errorf("read: expected ok to be %t, but got %t", expectedOk, ok)
+		}
+		if i != expectedInt {
+			t.Errorf("read: expected %d, but got %d", expectedInt, i)
+		}
+	}
+
+	testPeekInt(12, true)
+	testPeekInt(12, true)
+	testReadInt(12, true)
+
+	testReadInt(13, true)
+
+	testPeekInt(14, true)
+	testReadInt(14, true)
+
+	testReadInt(0, false)
+	testPeekInt(0, false)
 }
